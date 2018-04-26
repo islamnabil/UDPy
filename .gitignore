@@ -3,3 +3,6 @@ venv/
 *.pyc
 __pycache__/
 .idea/
+
+file.pdf
+test.txt

@@ -1,58 +1,60 @@
-import socket
-
-from Packet import *
-
-SERVER_FOLDER = 'server/'
+from Server import *
 
 
 class Client:
-    def __init__(self, ip='-1', port=9999):
-        if ip == '-1':
-            self.ip, self.port = self.local_address(port)
-        else:
-            self.ip, self.port = ip, port
+    def __init__(self, port):
+        self.ip, self.port = local_address(port)
         self.address = (self.ip, self.port)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     def request(self, file):
-        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        server.connect(self.address)
+        # Connect to server
+        self.socket.connect(self.address)
         print('Connected to', self.address)
 
-        # request file
-        request = Packet(request_type='GET', file=file)
-        server.send(request.__dumb__())
-        print('Check File: ', request)
+        # Send file request
+        pkt = Packet(file=file)
+        self.socket.send(pkt.__dumb__())
 
-        # response
-        res = Packet(pickled=server.recv(PACKET_SIZE))
-        if res.__get__('status') == 'found':
-            self.recv_file(file, server)
-        else:
-            print("Cannot Receive: ", res.__dumb__())
+        # Check for response
+        try:
+            res = self.socket.recv(PACKET_SIZE)
+            pkt = Packet(pickled=res)
+            pkt.__print__()
 
-    @staticmethod
-    def recv_file(file_name, server):
-        file = open(file=file_name, mode='ab')
-        while True:
-            res = Packet(pickled=server.recv(PACKET_SIZE))
-            print(res.__dumb__())
-            if len(res.__dumb__()) == 0:
-                break
-            if res.__validate__():
-                file.write(res.__get__('data'))
-                server.send(Packet(seq_num=res.__get__('seq_num'), ack='+').__dumb__())
+            if pkt.__get__('status') == 'found':
+                self.recv_file(file)
             else:
-                server.send(Packet(seq_num=res.__get__('seq_num'), ack='-').__dumb__())
-        file.close()
-        server.close()
+                pkt.__print__()
+        except ConnectionError:
+            pass
 
-    @staticmethod
-    def local_address(port):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("192.168.1.1", 80))
-        return s.getsockname()[0], port
+    def recv_file(self, file):
+        open(file=file, mode='wb').close()
+        f = open(file=file, mode='ab')
+        while True:
+            try:
+                res = self.socket.recv(PACKET_SIZE)
+                if res:
+                    pkt = Packet(pickled=res)
+                    pkt.__print__()
+                    # Check for corruption
+                    if pkt.__validate__():
+                        f.write(pkt.__get__('data'))
+                        # Send positive ack
+                        ack = Packet(seq_num=pkt.__get__('seq_num'), ack='+')
+                        self.socket.send(ack.__dumb__())
+                    else:  # Send negative ack
+                        ack = Packet(seq_num=pkt.__get__('seq_num'), ack='-')
+                        self.socket.send(ack.__dumb__())
+                else:
+                    raise ConnectionError
+            except ConnectionError:
+                break
+        f.close()
+        self.socket.close()
 
 
-requested_file = input("File name: ") or 'file.pdf'
-client = Client()
-client.request(requested_file)
+requested_file = input('File name: ') or 'text.txt'
+c = Client(SERVER_PORT)
+c.request(requested_file)
