@@ -5,4 +5,5 @@ __pycache__/
 .idea/
 
 file.pdf
-*.txt
+img.jpg
+text.txt
