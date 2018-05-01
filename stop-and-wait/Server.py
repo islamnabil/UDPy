@@ -1,5 +1,5 @@
 import os
-from _socket import timeout
+from socket import timeout
 from threading import Thread
 
 from Packet import Packet

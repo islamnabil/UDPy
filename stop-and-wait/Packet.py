@@ -1,10 +1,12 @@
 import pickle
 import pprint
 from hashlib import sha1
+# from termcolor import colored
 
 
 class Packet:
-    def __init__(self, pickled=None, seq_num=0, data=b'', ack='', file='', status=''):
+    def __init__(self, pickled=None, seq_num=0, data=b'',
+                 ack='', file='', status=''):
         if pickled is not None:
             self.packet = pickle.loads(pickled)
         else:
@@ -13,7 +15,7 @@ class Packet:
                 "file": file,
                 "ack": ack,
                 "seq_num": seq_num,
-                "checksum": sha1(data).hexdigest(),
+                "checksum": sha1(data).hexdigest() if data else '',
                 "data": data
             }
 

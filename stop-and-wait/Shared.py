@@ -2,6 +2,7 @@ import socket
 
 SERVER_PORT = 9999
 SERVER_FOLDER = 'server/'
+CLIENT_FOLDER = 'client/'
 
 PACKET_SIZE = 3 * 1024
 CHUNK_SIZE = 2 * 1024

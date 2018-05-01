@@ -19,7 +19,7 @@ class Client:
         # Check for response
         res = self.socket.recv(PACKET_SIZE)
         if not res:
-            print('Disconnected')
+            print('Disconnected from', self.server_address)
         else:
             pkt = Packet(pickled=res)
             pkt.__print__()
@@ -27,12 +27,13 @@ class Client:
                 self.recv_file(file)
 
     def recv_file(self, file):
-        open(file=file, mode='wb').close()
-        f = open(file=file, mode='ab')
+        received_file = CLIENT_FOLDER + file
+        open(file=received_file, mode='wb').close()
+        f = open(file=received_file, mode='ab')
         while True:
             res = self.socket.recv(PACKET_SIZE)
             if not res:
-                print('Disconnected')
+                print('Disconnected from', self.server_address)
                 break
 
             pkt = Packet(pickled=res)
