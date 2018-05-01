@@ -19,16 +19,21 @@ class Server:
         self.socket.listen()
         print('[Listening on ]', self.address)
         while True:
-            client, address = self.socket.accept()
-            print('Client connected, address: ', address)
-            client.settimeout(4)  # Client Timeout in sec
+            try:
+                client, address = self.socket.accept()
+                print('Client connected, address: ', address)
+                client.settimeout(4)  # Client Timeout in sec
 
-            # create new thread to serve the client
-            thread = Thread(target=self.serve_client, args=(client, address))
-            self.threads.append(thread)
-            thread.start()
-            self.thread_count += 1
-            print('Thread ' + str(self.thread_count))
+                # create new thread to serve the client
+                thread = Thread(target=self.serve_client,
+                                args=(client, address))
+                self.threads.append(thread)
+                thread.start()
+                self.thread_count += 1
+                print('Thread ' + str(self.thread_count))
+            except KeyboardInterrupt:
+                print('\nServer Terminated')
+                break
 
     def serve_client(self, client, address):
         request = client.recv(PACKET_SIZE)
