@@ -1,7 +1,7 @@
 import pickle
 import pprint
 from hashlib import sha1
-# from termcolor import colored
+from termcolor import colored
 
 
 class Packet:
@@ -29,4 +29,20 @@ class Packet:
         return self.packet[field]
 
     def __print__(self):
-        pprint.pprint(self.packet)
+        status = self.__get__('status')
+        file = self.__get__('file')
+        ack = self.__get__('ack')
+        seq_num = str(self.__get__('seq_num'))
+
+        if ack == '+':
+            print(colored('Ack ' + seq_num, color='green'))
+        elif ack == '-':
+            print(colored('Ack ' + seq_num, color='red'))
+        elif file:
+            print(colored('Requesting file: ' + file, color='cyan'))
+        elif status == 'found':
+            print(colored('File is found, recieving', color='green'))
+        elif status == 'not_found':
+            print(colored('File not found', color='red'))
+        else:
+            pprint.pprint(self.packet)
