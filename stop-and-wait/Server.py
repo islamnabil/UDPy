@@ -23,58 +23,76 @@ class Server:
                 client, address = self.socket.accept()
                 print('Client connected, address: ', address)
                 client.settimeout(4)  # Client Timeout in sec
-
                 # create new thread to serve the client
                 thread = Thread(target=self.serve_client,
                                 args=(client, address))
                 self.threads.append(thread)
                 thread.start()
                 self.thread_count += 1
-                print('Thread ' + str(self.thread_count))
+                print('Client No: ' + str(self.thread_count))
             except KeyboardInterrupt:
                 print('\nServer Terminated')
                 break
 
+    # Send packet to the client & wait for positive ack
+    # Returns 1 on success else 0
+    def send_packet(self, packet, client):
+        client_timeout_count = CLIENT_TIMEOUT_TRIALS
+        while client_timeout_count:
+            client.send(packet.__dumb__())
+            try:  # Wait for response or timeout
+                res = client.recv(PACKET_SIZE)
+                if not res:
+                    print('Client Disconnected')
+                    return 0
+                pkt = Packet(pickled=res)
+                pkt.__print__()
+                if pkt.__get__('ack') == '+':
+                    return 1
+                else:
+                    print('Negative ack, resending : ' + str(seq_num))
+            except timeout:
+                print('Timeout, resending packet: ' + str(seq_num))
+                client_timeout_count -= 1
+        return 0
+
+    # return file request packet or zero after time out
+    def wait_for_request(self, client, address):
+        client_timeout_count = CLIENT_TIMEOUT_TRIALS
+        while client_timeout_count:
+            try:
+                request = client.recv(PACKET_SIZE)
+                if request:
+                    pkt = Packet(pickled=request)
+                    pkt.__print__()
+                    return pkt
+                else:
+                    print('Client disconnected, address:', address)
+                    break
+            except timeout:
+                client_timeout_count -= 1
+        return 0
+
     def serve_client(self, client, address):
-        request = client.recv(PACKET_SIZE)
-
-        pkt = Packet(pickled=request)
-        pkt.__print__()
-
+        pkt = self.wait_for_request(client, address)
+        if not pkt:
+            return 1
         file = SERVER_FOLDER + pkt.__get__('file')
-        if os.path.isfile(file):  # if file found on the server
+        if os.path.isfile(file):  # if file is found on the server
             pkt = Packet(status='found')
             client.send(pkt.__dumb__())
-
             # Logic goes here
             seq_num = 0
             f = open(file=file, mode='rb')
             data = f.read(CHUNK_SIZE)
             while data:
-
-                # Send Packet and block until pos ack is received
-                while True:
-                    pkt = Packet(data=data, seq_num=seq_num)
-                    client.send(pkt.__dumb__())
-
-                    try:  # Wait for response or timeout
-                        res = client.recv(PACKET_SIZE)
-                        if not res:
-                            print('Client Disconnected')
-                            break
-
-                        pkt = Packet(pickled=res)
-                        pkt.__print__()
-                        if pkt.__get__('ack') == '+':
-                            break
-                        else:
-                            print('Negative ack, resending : ' + str(seq_num))
-                    except timeout:
-                        print('Timeout, resending packet: ' + str(seq_num))
-
+                # Build packet
+                pkt = Packet(data=data, seq_num=seq_num)
+                # Send and check for success
+                if not self.send_packet(pkt, client):
+                    break
                 seq_num += 1
                 data = f.read(CHUNK_SIZE)
-
         else:  # if file not found, send not found packet
             pkt = Packet(status='not_found')
             client.send(pkt.__dumb__())
@@ -84,5 +102,4 @@ class Server:
 
 
 if __name__ == '__main__':
-    port_num = 9999
-    Server(port_num).listen()
+    Server(SERVER_PORT).listen()
