@@ -7,8 +7,8 @@ from Shared import *
 
 
 class Server:
-    def __init__(self, port=9999):
-        self.ip, self.port = local_address(port)
+    def __init__(self, ip='localhost', port=9999):
+        self.ip, self.port = ip, port
         self.address = (self.ip, self.port)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.bind(self.address)
@@ -37,6 +37,7 @@ class Server:
     # Send packet to the client & wait for positive ack
     # Returns 1 on success else 0
     def send_packet(self, packet, client):
+        seq_num = str(packet.__get__('seq_num'))
         client_timeout_count = CLIENT_TIMEOUT_TRIALS
         while client_timeout_count:
             client.send(packet.__dumb__())
@@ -50,9 +51,9 @@ class Server:
                 if pkt.__get__('ack') == '+':
                     return 1
                 else:
-                    print('Negative ack, resending : ' + str(seq_num))
+                    print('Negative ack, resending : ' + seq_num)
             except timeout:
-                print('Timeout, resending packet: ' + str(seq_num))
+                print('Timeout, resending packet: ' + seq_num)
                 client_timeout_count -= 1
         return 0
 
@@ -102,4 +103,4 @@ class Server:
 
 
 if __name__ == '__main__':
-    Server(SERVER_PORT).listen()
+    Server(port=SERVER_PORT).listen()

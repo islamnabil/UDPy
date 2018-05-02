@@ -4,8 +4,8 @@ from Shared import CLIENT_TIMEOUT_TRIALS
 
 
 class Client:
-    def __init__(self, port):
-        self.ip, self.port = local_address(port)
+    def __init__(self, ip='localhost', port=9999):
+        self.ip, self.port = ip, port
         self.server_address = (self.ip, self.port)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -70,5 +70,5 @@ class Client:
 
 
 requested_file = input('File name: ') or 'text.txt'
-c = Client(SERVER_PORT)
+c = Client(port=SERVER_PORT)
 c.request(requested_file)

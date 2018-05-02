@@ -1,6 +1,7 @@
 import socket
 
 SERVER_PORT = 9999
+SERVER_LOCAL_ADDRESS = 'localhost'  # local_address(SERVER_PORT)
 SERVER_FOLDER = 'server/'
 
 CLIENT_FOLDER = 'client/'
