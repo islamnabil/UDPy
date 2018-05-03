@@ -90,17 +90,25 @@ class Server:
             pkt = Packet(status='found')
             client.send(pkt.__dumb__())
             # Logic goes here
-            seq_num = 0
             f = open(file=file, mode='rb')
-            data = f.read(CHUNK_SIZE)
-            while data:
+            data = f.read()
+            packets = [
+                Packet(data=data[i: i + CHUNK_SIZE], seq_num=i / CHUNK_SIZE)
+                for i in range(0, len(data), CHUNK_SIZE)
+            ]
+            for pkt in packets:
+                pkt.__print__()
+            return
+            start = 0
+            while start:
                 # Build packet
                 pkt = Packet(data=data, seq_num=seq_num)
                 # Send and check for success
                 if not self.send_packet(pkt, client):
                     break
-                seq_num += 1
                 data = f.read(CHUNK_SIZE)
+                if not data:
+                    break
         else:  # if file not found, send not found packet
             pkt = Packet(status='not_found')
             client.send(pkt.__dumb__())
