@@ -54,30 +54,36 @@ class Client:
         open(file=received_file, mode='wb').close()
         f = open(file=received_file, mode='ab')
 
-        timeout_trials = CLIENT_TIMEOUT_TRIALS
-        while timeout_trials:
-            res = self.socket.recv(PACKET_SIZE)
-            if not res:
-                print('Disconnected from', self.server_address)
-                break
+        while True:
+            try:
+                res = self.socket.recv(PACKET_SIZE)
+                if not res:
+                    print('Disconnected from', self.server_address)
+                    break
 
-            pkt = Packet(pickled=res)
-            pkt.__print__()
-            # Simulating packet corruption
-            if randint(1, 100) > CORRUPTION_PROBABILITY:
-                f.write(pkt.__get__('data'))
-                # Send positive ack
-                ack = Packet(seq_num=pkt.__get__('seq_num'), ack='+')
-                self.socket.send(ack.__dumb__())
-            else:  # Send negative ack
-                print(colored('Simulating packet corruption (Negative Ack): ' +
-                              pkt.__get__('seq_num'), color='red'))
-                ack = Packet(seq_num=pkt.__get__('seq_num'), ack='-')
-                self.socket.send(ack.__dumb__())
+                pkt = Packet(pickled=res)
+                pkt.__print__()
+                # Simulating packet corruption
+                if randint(1, 100) > CORRUPTION_PROBABILITY:
+                    f.write(pkt.__get__('data'))
+                    # Send positive ack
+                    ack = Packet(seq_num=pkt.__get__('seq_num'), ack='+')
+                    self.socket.send(ack.__dumb__())
+                else:  # Send negative ack
+                    print(
+                        colored(
+                            'Simulating packet corruption (Negative Ack): ' +
+                            pkt.__get__('seq_num'), color='red')
+                    )
+                    ack = Packet(seq_num=pkt.__get__('seq_num'), ack='-')
+                    self.socket.send(ack.__dumb__())
+            except Exception as e:
+                print(e)
+                break
         f.close()
         self.socket.close()
 
 
-requested_file = input('File name: ') or 'text.txt'
+requested_file = input('File name: ') or 'img.jpg'
 c = Client(port=SERVER_PORT)
 c.request(requested_file)
