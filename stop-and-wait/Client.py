@@ -31,7 +31,6 @@ class Client:
                 pkt = Packet(pickled=res)
                 pkt.__print__()
                 if pkt.__get__('status') == 'found':
-                    self.recv_file(file)
                     break
                 elif pkt.__get__('status') == 'not_found':
                     print('File Not Found')
@@ -42,6 +41,9 @@ class Client:
             except timeout:
                 print('File request timeout')
                 timeout_trials -= 1
+
+        if timeout_trials:
+            self.recv_file(file)
 
     def recv_file(self, file):
         received_file = CLIENT_FOLDER + file
