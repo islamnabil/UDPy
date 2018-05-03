@@ -1,5 +1,6 @@
 from Server import *
 from socket import timeout
+from random import randint
 from Shared import CLIENT_TIMEOUT_TRIALS
 
 
@@ -57,7 +58,7 @@ class Client:
             pkt = Packet(pickled=res)
             pkt.__print__()
             # Check for corruption
-            if pkt.__validate__():
+            if pkt.__validate__() and randint(1, 100) > CORRUPTION_PROBABILITY:
                 f.write(pkt.__get__('data'))
                 # Send positive ack
                 ack = Packet(seq_num=pkt.__get__('seq_num'), ack='+')
