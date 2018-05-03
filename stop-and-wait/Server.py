@@ -1,6 +1,8 @@
 import os
 from socket import timeout
 from threading import Thread
+from random import randint
+from termcolor import colored
 
 from Packet import Packet
 from Shared import *
@@ -22,7 +24,7 @@ class Server:
             try:
                 client, address = self.socket.accept()
                 print('Client connected, address: ', address)
-                client.settimeout(4)  # Client Timeout in sec
+                client.settimeout(TIME_OUT_SEC)  # Client Timeout in sec
                 # create new thread to serve the client
                 thread = Thread(target=self.serve_client,
                                 args=(client, address))
@@ -31,16 +33,19 @@ class Server:
                 self.thread_count += 1
                 print('Client No: ' + str(self.thread_count))
             except KeyboardInterrupt:
-                print('\nServer Terminated')
+                print('\nServer Terminated, waiting for all threads to join')
                 break
 
     # Send packet to the client & wait for positive ack
     # Returns 1 on success else 0
     def send_packet(self, packet, client):
-        seq_num = str(packet.__get__('seq_num'))
+        seq_num = packet.__get__('seq_num')
         client_timeout_count = CLIENT_TIMEOUT_TRIALS
         while client_timeout_count:
-            client.send(packet.__dumb__())
+            if randint(1, 100) > LOSS_PROBABILITY:
+                client.send(packet.__dumb__())
+            else:
+                print(colored('Simulating Packet Loss: ' + seq_num, 'red'))
             try:  # Wait for response or timeout
                 res = client.recv(PACKET_SIZE)
                 if not res:
@@ -51,9 +56,11 @@ class Server:
                 if pkt.__get__('ack') == '+':
                     return 1
                 else:
-                    print('Negative ack, resending : ' + seq_num)
+                    print(colored('Negative ack, resending : ' + seq_num,
+                                  color='red'))
             except timeout:
-                print('Timeout, resending packet: ' + seq_num)
+                print(colored('Timeout, resending packet: ' + seq_num,
+                              color='red'))
                 client_timeout_count -= 1
         return 0
 

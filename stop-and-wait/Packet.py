@@ -26,7 +26,10 @@ class Packet:
         return self.packet['checksum'] == sha1(self.packet['data']).hexdigest()
 
     def __get__(self, field):
-        return self.packet[field]
+        if field == 'seq_num':
+            return str(self.packet[field])
+        else:
+            return self.packet[field]
 
     def __print__(self):
         status = self.__get__('status')

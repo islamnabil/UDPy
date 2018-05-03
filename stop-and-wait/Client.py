@@ -1,6 +1,8 @@
 from Server import *
 from socket import timeout
 from random import randint
+from termcolor import colored
+
 from Shared import CLIENT_TIMEOUT_TRIALS
 
 
@@ -13,7 +15,7 @@ class Client:
     def request(self, file):
         # Connect to server
         self.socket.connect(self.server_address)
-        self.socket.settimeout(4)
+        self.socket.settimeout(TIME_OUT_SEC)
         print('Connected to', self.server_address)
 
         # Send file request and wait for response
@@ -46,6 +48,8 @@ class Client:
             self.recv_file(file)
 
     def recv_file(self, file):
+        self.socket.settimeout(None)
+
         received_file = CLIENT_FOLDER + file
         open(file=received_file, mode='wb').close()
         f = open(file=received_file, mode='ab')
@@ -59,13 +63,15 @@ class Client:
 
             pkt = Packet(pickled=res)
             pkt.__print__()
-            # Check for corruption
-            if pkt.__validate__() and randint(1, 100) > CORRUPTION_PROBABILITY:
+            # Simulating packet corruption
+            if randint(1, 100) > CORRUPTION_PROBABILITY:
                 f.write(pkt.__get__('data'))
                 # Send positive ack
                 ack = Packet(seq_num=pkt.__get__('seq_num'), ack='+')
                 self.socket.send(ack.__dumb__())
             else:  # Send negative ack
+                print(colored('Simulating packet corruption (Negative Ack): ' +
+                              pkt.__get__('seq_num'), color='red'))
                 ack = Packet(seq_num=pkt.__get__('seq_num'), ack='-')
                 self.socket.send(ack.__dumb__())
         f.close()
