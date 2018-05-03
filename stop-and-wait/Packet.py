@@ -35,9 +35,9 @@ class Packet:
         seq_num = str(self.__get__('seq_num'))
 
         if ack == '+':
-            print(colored('Ack ' + seq_num, color='green'))
+            print(colored('Positive Ack ' + seq_num, color='green'))
         elif ack == '-':
-            print(colored('Ack ' + seq_num, color='red'))
+            print(colored('Negative Ack ' + seq_num, color='red'))
         elif file:
             print(colored('Requesting file: ' + file, color='cyan'))
         elif status == 'found':
@@ -45,4 +45,5 @@ class Packet:
         elif status == 'not_found':
             print(colored('File not found', color='red'))
         else:
-            pprint.pprint(self.packet)
+            print(colored('Recieved Packet ' + seq_num, color='yellow'))
+        # pprint.pprint(self.packet)
