@@ -1,8 +1,8 @@
-from Server import *
 from socket import timeout
 from random import randint
 from termcolor import colored
 
+from GBN_Server import *
 from Shared import CLIENT_TIMEOUT_TRIALS
 
 
@@ -53,7 +53,7 @@ class Client:
         received_file = CLIENT_FOLDER + file
         open(file=received_file, mode='wb').close()
         f = open(file=received_file, mode='ab')
-
+        expected = 0
         while True:
             try:
                 res = self.socket.recv(PACKET_SIZE)
@@ -65,10 +65,18 @@ class Client:
                 pkt.__print__()
                 # Simulating packet corruption
                 if randint(1, 100) > CORRUPTION_PROBABILITY:
-                    f.write(pkt.__get__('data'))
-                    # Send positive ack
-                    ack = Packet(seq_num=pkt.__get__('seq_num'), ack='+')
-                    self.socket.send(ack.__dumb__())
+                    if int(pkt.__get__('seq_num')) == expected:
+                        f.write(pkt.__get__('data'))
+                        # Send positive ack
+                        ack = Packet(seq_num=pkt.__get__('seq_num'), ack='+')
+                        self.socket.send(ack.__dumb__())
+                        expected += 1
+                    else:
+                        print(
+                            colored(
+                                'Unexpected packet, dropped: ' +
+                                pkt.__get__('seq_num'), color='red')
+                        )
                 else:  # Send negative ack
                     print(
                         colored(
