@@ -71,10 +71,16 @@ class Client:
                         ack = Packet(seq_num=pkt.__get__('seq_num'), ack='+')
                         self.socket.send(ack.__dumb__())
                         expected += 1
+                    elif int(pkt.__get__('seq_num')) < expected:
+                        # Send positive ack
+                        ack = Packet(seq_num=pkt.__get__('seq_num'), ack='+')
+                        self.socket.send(ack.__dumb__())
                     else:
                         print(
                             colored(
-                                'Unexpected packet, dropped: ' +
+                                'Unexpected packet, waiting for ' +
+                                str(expected) +
+                                ', dropped: ' +
                                 pkt.__get__('seq_num'), color='red')
                         )
                 else:  # Send negative ack
