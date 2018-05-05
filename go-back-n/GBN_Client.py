@@ -23,14 +23,14 @@ class Client:
         while timeout_trials:
             # Send file request
             pkt = Packet(file=file)
-            self.socket.send(pkt.__dumb__())
+            self.socket.send(pkt.__dump__())
             try:
                 res = self.socket.recv(PACKET_SIZE)
                 if not res:
                     print('Disconnected from', self.server_address)
                     break
 
-                pkt = Packet(pickled=res)
+                pkt = Packet(res=res)
                 pkt.__print__()
                 if pkt.__get__('status') == 'found':
                     break
@@ -61,7 +61,7 @@ class Client:
                     print('Disconnected from', self.server_address)
                     break
 
-                pkt = Packet(pickled=res)
+                pkt = Packet(res=res)
                 pkt.__print__()
                 # Simulating packet corruption
                 if randint(1, 100) > CORRUPTION_PROBABILITY:
@@ -69,12 +69,12 @@ class Client:
                         f.write(pkt.__get__('data'))
                         # Send positive ack
                         ack = Packet(seq_num=pkt.__get__('seq_num'), ack='+')
-                        self.socket.send(ack.__dumb__())
+                        self.socket.send(ack.__dump__())
                         expected += 1
                     elif int(pkt.__get__('seq_num')) < expected:
                         # Send positive ack
                         ack = Packet(seq_num=pkt.__get__('seq_num'), ack='+')
-                        self.socket.send(ack.__dumb__())
+                        self.socket.send(ack.__dump__())
                     else:
                         print(
                             colored(
@@ -90,7 +90,7 @@ class Client:
                             pkt.__get__('seq_num'), color='red')
                     )
                     ack = Packet(seq_num=pkt.__get__('seq_num'), ack='-')
-                    self.socket.send(ack.__dumb__())
+                    self.socket.send(ack.__dump__())
             except Exception as e:
                 print(e)
                 break

@@ -24,7 +24,6 @@ class Server:
             try:
                 client, address = self.socket.accept()
                 print('Client connected, address: ', address)
-                client.settimeout(TIME_OUT_SEC)  # Client Timeout in sec
                 # create new thread to serve the client
                 thread = Thread(target=self.serve_client,
                                 args=(client, address))
@@ -36,23 +35,24 @@ class Server:
                 print('\nServer Terminated, waiting for all threads to join')
                 break
 
-    def send_window(self, packets, base, client):
+    def send_window(self, packets, base, client, address):
         end = base + WINDOW_SIZE
         end = end if end < len(packets) else len(packets)
 
         # Send Window packets
         for pkt in packets[base:end]:
-            pkt.__print__()
             if randint(1, 100) > LOSS_PROBABILITY:
-                client.send(pkt.__dumb__())
+                pkt.__print__(to_address=address)
+                client.send(pkt.__dump__())
             else:
-                print(colored('Simulating Packet Loss: ' + seq_num, 'red'))
+                print(colored('Simulating Packet Loss: ' +
+                              pkt.__get__('seq_num'), 'red'))
 
     # Send packet to the client & wait for positive ack
     # Returns 1 on success else 0
-    def begin_transimission(self, packets, client):
+    def begin_transimission(self, packets, client, address):
         base = 0
-        self.send_window(packets, base, client)
+        self.send_window(packets, base, client, address)
 
         client_timeout_count = CLIENT_TIMEOUT_TRIALS
         while client_timeout_count:
@@ -67,30 +67,28 @@ class Server:
                 res = client.recv(PACKET_SIZE)
                 if not res:
                     break
-                pkt = Packet(pickled=res)
-                pkt.__print__()
+                pkt = Packet(res=res)
+                pkt.__print__(from_address=address)
                 seq_num = int(pkt.__get__('seq_num'))
-                if seq_num >= base and seq_num <= base + WINDOW_SIZE:
+                if base <= seq_num <= base + WINDOW_SIZE:
                     if pkt.__get__('ack') == '+':
+                        client.settimeout(None)
                         free_slots = int(pkt.__get__('seq_num')) - base + 1
-                        end = end + 1
-                        end = end if end < len(packets) else len(packets)
                         nEnd = end + free_slots
                         nEnd = nEnd if nEnd < len(packets) else len(packets)
                         new_pkts = packets[end:nEnd]
                         for pkt in new_pkts:
-                            print('new!!!!!!!!!!!!!!!!')
-                            pkt.__print__()
-                            client.send(pkt.__dumb__())
+                            pkt.__print__(to_address=address)
+                            client.send(pkt.__dump__())
                         base += free_slots
-                    else:
-                        print(colored('Negative ack: ' + seq_num, color='red'))
                 else:
                     print(colored('Ack out of window, discard ' +
-                                  seq_num, color='blue'))
+                                  str(seq_num) + ' => from: ' + str(address),
+                                  color='blue'))
             except timeout:
-                print(colored('Timeout, resending window.', color='red'))
-                self.send_window(packets, base, client)
+                print(colored('Timeout, resending window. => to: ' +
+                              str(address), color='red'))
+                self.send_window(packets, base, client, address)
                 client_timeout_count -= 1
 
     # return file request packet or zero after time out
@@ -100,8 +98,8 @@ class Server:
             try:
                 request = client.recv(PACKET_SIZE)
                 if request:
-                    pkt = Packet(pickled=request)
-                    pkt.__print__()
+                    pkt = Packet(res=request)
+                    pkt.__print__(from_address=address)
                     return pkt
                 else:
                     print('Client disconnected, address:', address)
@@ -117,19 +115,22 @@ class Server:
         file = SERVER_FOLDER + pkt.__get__('file')
         if os.path.isfile(file):  # if file is found on the server
             pkt = Packet(status='found')
-            client.send(pkt.__dumb__())
+            client.send(pkt.__dump__())
             # Logic goes here
             f = open(file=file, mode='rb')
             data = f.read()
             # Build packet
             packets = [
-                Packet(data=data[i: i + CHUNK_SIZE], seq_num=i // CHUNK_SIZE)
+                Packet(data=data[i: i + CHUNK_SIZE],
+                       seq_num=i // CHUNK_SIZE)
                 for i in range(0, len(data), CHUNK_SIZE)
             ]
-            self.begin_transimission(packets=packets, client=client)
+
+            self.begin_transimission(
+                packets=packets, client=client, address=address)
         else:  # if file not found, send not found packet
             pkt = Packet(status='not_found')
-            client.send(pkt.__dumb__())
+            client.send(pkt.__dump__())
 
         print('Client disconnected, address: ', address)
         client.close()
