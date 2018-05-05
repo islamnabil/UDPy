@@ -1,5 +1,4 @@
 import pickle
-import pprint
 from hashlib import sha1
 from termcolor import colored
 
@@ -49,4 +48,3 @@ class Packet:
             print(colored('File not found', color='red'))
         else:
             print(colored('Recieved Packet ' + seq_num, color='yellow'))
-        # pprint.pprint(self.packet)
