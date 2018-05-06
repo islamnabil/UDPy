@@ -9,6 +9,7 @@
 ---
 
 Implementing a Reliable Data Transport Protocol with Python using different reliable data transfer techniques:
+
     - Go-back-N.
     - Stop and Wait.
     - Selectiverepeat.
@@ -16,6 +17,14 @@ Implementing a Reliable Data Transport Protocol with Python using different reli
 
 ## - Stop And Wait
 Referred to as alternating bit protocol, is a method in telecommunications to send information between two connected devices. It ensures that information is not lost due to dropped packets and that packets are received in the correct order. It is the simplest automatic repeat-request (ARQ) mechanism. A stop-and-wait ARQ sender sends one frame at a time; it is a special case of the general sliding window protocol with transmit and receive window sizes equal to one and greater than one respectively. After sending each frame, the sender doesn't send any further frames until it receives an acknowledgement (ACK) signal. After receiving a valid frame, the receiver sends an ACK. If the ACK does not reach the sender before a certain time, known as the timeout, the sender sends the same frame again. The timeout countdown is reset after each frame transmission. The above behavior is a basic example of Stop-and-Wait.
+
+- **Run**
+
+```bash
+cd stop-and-wait/
+python Server.py # To run the server
+python Client.py # To run the client side
+```
 
 - **Scenario**
 
@@ -54,6 +63,13 @@ class Packet:
 
 ## - Go-Back-N
 
+- **Run**
+
+```bash
+cd go-back-n/
+python GBN_Server.py # To run the server
+python GBN_Client.py # To run the client side
+```
 
 - **Scenario**
 
@@ -104,11 +120,11 @@ class Packet:
 
 ## - Selective Repeat
  **HOW TO RUN :**
- Change the directory to SelecvtiveRepeat folder and run the server 
+ Change the directory to SelecvtiveRepeat folder and run the server
      `cd SelectiveRepaet`
-     
+
     python ServerApp.py
-    
+
  open another terminal tab for client (Client Port = 8080)
  ```
     python ClientApp.py
