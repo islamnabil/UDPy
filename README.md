@@ -103,8 +103,23 @@ class Packet:
 
 
 ## - Selective Repeat
-
-
+ **HOW TO RUN :**
+ open the terminal to run the server 
+    ```
+    cd SelectiveRepaet
+    python ServerApp.py
+    ```
+ open another terminal tab for client (Client Port = 8080)
+ ```
+    python ClientApp.py
+ ```
+ **Sample Runs**
+ **SERVER**
+    ![](https://i.imgur.com/HGYpLfO.png)
+    ![](https://i.imgur.com/DUFuNgg.png)
+ **Client**
+    [](https://i.imgur.com/lE2Vgxa.png)
+    [](https://i.imgur.com/wtmNCT9.png)
 ## - Comparison
 
 Comparing these techniques over [1, 2, 3, 4, 5, 10, 30] % PLP
