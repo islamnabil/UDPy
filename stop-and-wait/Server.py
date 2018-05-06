@@ -3,6 +3,7 @@ from socket import timeout
 from threading import Thread
 from random import randint
 from termcolor import colored
+from datetime import datetime
 
 from Packet import Packet
 from Shared import *
@@ -82,6 +83,7 @@ class Server:
         return 0
 
     def serve_client(self, client, address):
+        total_time = datetime.now()
         pkt = self.wait_for_request(client, address)
         if not pkt:
             return 1
@@ -91,9 +93,11 @@ class Server:
             client.send(pkt.__dumb__())
             # Logic goes here
             seq_num = 0
+            bits = 0
             f = open(file=file, mode='rb')
             data = f.read(CHUNK_SIZE)
             while data:
+                bits += 8 * len(data)
                 # Build packet
                 pkt = Packet(data=data, seq_num=seq_num)
                 # Send and check for success
@@ -101,6 +105,16 @@ class Server:
                     break
                 seq_num += 1
                 data = f.read(CHUNK_SIZE)
+
+            total_time = (datetime.now() - total_time).total_seconds()
+            print('Sent ' + str(bits) + ' bits, in ' +
+                  str(total_time) + ' secs')
+
+            with open('log.txt', 'a') as log:
+                run_metrics = '\'\'^||^\'\'' + '\n'
+                run_metrics += 'THROUGHPUT=' + str(bits / total_time) + '\n'
+                log.write(run_metrics)
+
         else:  # if file not found, send not found packet
             pkt = Packet(status='not_found')
             client.send(pkt.__dumb__())

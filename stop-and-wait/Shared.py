@@ -19,6 +19,7 @@ def read_args():
 
 
 args = read_args()
+FILENAME = args['FILENAME']
 SERVER_PORT = int(args['SERVER_PORT'])
 SERVER_ADDRESS = args['SERVER_ADDRESS']  # get_local_address(SERVER_PORT)
 LOSS_PROBABILITY = int(args['LOSS_PROBABILITY'])
