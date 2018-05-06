@@ -13,6 +13,7 @@ def ServerApp():
     senderIP = "localhost"
     senderPort = int (raw_input("Port Number: "))
     windowSize = int (raw_input("windowSize : "))
+    bitError = float (raw_input("bitError: "))
     sequenceNumberBits = 2
     maxSegmentSize = 1500
    
@@ -29,7 +30,7 @@ def ServerApp():
             
         # Create sending UDP socket
            
-            sender.open()
+            sender.open(bitError)
             
             # # Send file to receiver
             print >>sys.stderr, 'SEEEEEEEEEEEEEEEEEEEEND'

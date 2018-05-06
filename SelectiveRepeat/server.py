@@ -59,12 +59,15 @@ class Sender(object):
         self.maxSegmentSize = maxSegmentSize
         self.www = www
 
-    def open(self):  #**********************************************EDITED 
+    def open(self,bitError=.1):  #**********************************************EDITED 
         """
         Create UDP socket for communication with the client.
         """
         log.info("Creating UDP socket %s:%d for communication with the client",
                   self.senderIP, self.senderPort)
+        
+        
+        self.bitError= bitError
 
         while 1:
             self.senderSocket = socket.socket(socket.AF_INET,
@@ -77,12 +80,12 @@ class Sender(object):
                 receiverPort=8080
                 totalPackets="ALL"
                 timeout=10
-
+                bitError= .1
                 self.send(fileName,
                      receiverIP,
                      receiverPort,
                      totalPackets,
-                        timeout)
+                        timeout,self.bitError)
                 
       
 #*************************************************************************************************#
@@ -92,7 +95,8 @@ class Sender(object):
              receiverIP= '127.0.0.1',
              receiverPort= 8080 ,
              totalPackets= 'ALL',
-             timeout=10):
+             timeout=10,
+             bitError=.1):
         """
         Transmit specified file to the receiver.
         """
@@ -119,7 +123,7 @@ class Sender(object):
                                       window,
                                       self.maxSegmentSize,
                                       totalPackets,
-                                      timeout)
+                                      timeout,bitError)
 
         # Create a thread named 'ACKHandler' to monitor acknowledgement receipt
         log.info("Creating a thread to monitor acknowledgement receipt")
@@ -430,7 +434,7 @@ class SinglePacket(Thread):
         self.timeout = timeout
         self.bitErrorProbability = bitErrorProbability
         self.threadName = threadName
-
+        
     def run(self):
         """
         Start monitoring transmission of single packet.
@@ -482,6 +486,7 @@ class SinglePacket(Thread):
         Simulate artificial bit error.
         """
         r = random.random()
+        #print('Probability of bitError = ' + str(r))
 
         if r <= self.bitErrorProbability:
             return True
@@ -661,7 +666,9 @@ class ACKHandler(Thread):
         """
         Simulate artificial acknowledgement loss.
         """
-        r = random.random()
+        r = .5#random.random()
+        #print('Probability of bitError = ' + str(r))
+
 
         if r <= self.ackLossProbability:
             return True
