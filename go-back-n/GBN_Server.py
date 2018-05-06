@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from socket import timeout
 from threading import Thread
 from random import randint
@@ -78,8 +79,12 @@ class Server:
                         nEnd = nEnd if nEnd < len(packets) else len(packets)
                         new_pkts = packets[end:nEnd]
                         for pkt in new_pkts:
-                            pkt.__print__(to_address=address)
-                            client.send(pkt.__dump__())
+                            if randint(1, 100) > LOSS_PROBABILITY:
+                                pkt.__print__(to_address=address)
+                                client.send(pkt.__dump__())
+                            else:
+                                print(colored('Simulating Packet Loss: ' +
+                                              pkt.__get__('seq_num'), 'red'))
                         base += free_slots
                 else:
                     print(colored('Ack out of window, discard ' +
@@ -90,6 +95,8 @@ class Server:
                               str(address), color='red'))
                 self.send_window(packets, base, client, address)
                 client_timeout_count -= 1
+        # Retrun number of timeouts
+        return CLIENT_TIMEOUT_TRIALS - client_timeout_count
 
     # return file request packet or zero after time out
     def wait_for_request(self, client, address):
@@ -109,6 +116,7 @@ class Server:
         return 0
 
     def serve_client(self, client, address):
+        total_time = datetime.now()
         pkt = self.wait_for_request(client, address)
         if not pkt:
             return 1
@@ -119,6 +127,7 @@ class Server:
             # Logic goes here
             f = open(file=file, mode='rb')
             data = f.read()
+            bits = len(data) * 8
             # Build packet
             packets = [
                 Packet(data=data[i: i + CHUNK_SIZE],
@@ -126,8 +135,25 @@ class Server:
                 for i in range(0, len(data), CHUNK_SIZE)
             ]
 
-            self.begin_transimission(
+            timeout_count = self.begin_transimission(
                 packets=packets, client=client, address=address)
+
+            total_time = (datetime.now() - total_time).total_seconds()
+
+            print('Sent ' + str(bits) + ' bits, in ' +
+                  str(total_time) + ' secs, with ' +
+                  str(timeout_count) + ' timeouts')
+
+            with open('GBNlog.txt', 'a') as log:
+                run_metrics = DELIMITER.decode() + '\n'
+                run_metrics += 'TYPE=GBN\n'
+                run_metrics += 'THROUGHPUT=' + \
+                    str(bits / total_time) + '\n'
+                run_metrics += 'PACKET_LOSS=' + \
+                    str(LOSS_PROBABILITY) + '\n'
+
+                log.write(run_metrics)
+
         else:  # if file not found, send not found packet
             pkt = Packet(status='not_found')
             client.send(pkt.__dump__())

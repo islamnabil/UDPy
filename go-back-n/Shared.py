@@ -19,6 +19,7 @@ def read_args():
 
 
 args = read_args()
+FILE_NAME = args['FILE_NAME']
 SERVER_PORT = int(args['SERVER_PORT'])
 SERVER_ADDRESS = args['SERVER_ADDRESS']  # get_local_address(SERVER_PORT)
 LOSS_PROBABILITY = int(args['LOSS_PROBABILITY'])
@@ -31,5 +32,5 @@ CLIENT_FOLDER = 'client/'
 CLIENT_TIMEOUT_TRIALS = 50000
 
 PACKET_SIZE = 2048
-CHUNK_SIZE = 1952  # 1887 bytes
+CHUNK_SIZE = 1952
 DELIMITER = b'\'\'^||^\'\''  # 8

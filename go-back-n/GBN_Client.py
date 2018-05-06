@@ -2,8 +2,8 @@ from socket import timeout
 from random import randint
 from termcolor import colored
 
-from GBN_Server import *
-from Shared import CLIENT_TIMEOUT_TRIALS
+from Packet import *
+from Shared import *
 
 
 class Client:
@@ -98,6 +98,6 @@ class Client:
         self.socket.close()
 
 
-requested_file = input('File name: ') or 'img.jpg'
+requested_file = FILE_NAME
 c = Client(port=SERVER_PORT)
 c.request(requested_file)
