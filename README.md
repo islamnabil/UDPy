@@ -104,12 +104,10 @@ class Packet:
 
 ## - Selective Repeat
  **HOW TO RUN :**
- open the terminal to run the server 
-     ```cd SelectiveRepaet ```
+ Change the directory to SelecvtiveRepeat folder and run the server 
+     `cd SelectiveRepaet`
      
-    ```
     python ServerApp.py
-    ```
     
  open another terminal tab for client (Client Port = 8080)
  ```
