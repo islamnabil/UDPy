@@ -12,9 +12,9 @@ def ServerApp():
     # Arguments
     senderIP = "localhost"
     senderPort = int (raw_input("Port Number: "))
+    sequenceNumberBits = int (raw_input("SequenceNumberBits : "))
     windowSize = int (raw_input("windowSize : "))
     bitError = float (raw_input("bitError: "))
-    sequenceNumberBits = 2
     maxSegmentSize = 1500
    
    

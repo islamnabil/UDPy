@@ -41,7 +41,7 @@ class Receiver(object):
                  receiverIP="127.0.0.1",
                  receiverPort=8080,senderIP="localhost",
                  senderPort=10000,
-                 sequenceNumberBits=2,
+                 sequenceNumberBits=4,
                  windowSize=2,                   
                  www=os.path.join(os.getcwd(), "data", "receiver")):
         self.receiverIP = receiverIP

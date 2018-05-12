@@ -48,7 +48,7 @@ class Sender(object):
     def __init__(self,
                  senderIP="localhost",
                  senderPort=10000,
-                 sequenceNumberBits=2,
+                 sequenceNumberBits=4,
                  windowSize=None,
                  maxSegmentSize=1500,
                  www=os.path.join(os.getcwd(), "data", "sender")):
@@ -142,6 +142,12 @@ class Sender(object):
         # Wait for threads to finish their execution
         packetHandler.join()
         ackHandler.join()
+        log.info("File sent !")
+        self.close()
+        self.open()
+       
+       
+
 
     def close(self):
         """
@@ -150,6 +156,7 @@ class Sender(object):
         try:
             if self.senderSocket:
                 self.senderSocket.close()
+                log.info("connection Close")
         except Exception as e:
             log.error("Could not close UDP socket!")
             log.debug(e)
@@ -248,8 +255,9 @@ class Window(object):
             self.transmissionWindow[key][1] = True
 
     def stop_transmission(self):
-        with LOCK:
-            self.isPacketTransmission = False
+         
+             self.isPacketTransmission = False
+        
             
 
     def transmit(self):
@@ -342,7 +350,21 @@ class PacketHandler(Thread):
 
         # Stop packet transmission
         log.info("[%s] Stopping packet transmission", self.threadName)
-        #self.window.stop_transmission()
+        self.window.stop_transmission()
+        #self.stop_transmission()
+
+    def close(self):
+        """
+        Close UDP socket.
+        """
+        try:
+            if self.senderSocket:
+                self.senderSocket.close()
+        except Exception as e:
+            log.error("Could not close UDP socket!")
+            log.debug(e)
+            raise SocketError("Closing UDP socket %s:%d failed!"
+                              % (self.senderIP, self.senderPort))
 
     def generate_packets(self):
         """

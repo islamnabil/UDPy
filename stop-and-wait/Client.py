@@ -84,6 +84,6 @@ class Client:
         self.socket.close()
 
 
-requested_file = FILENAME
-c = Client(port=SERVER_PORT)
+requested_file = '1.pdf'
+c = Client(ip='172.16.3.205', port=9998)
 c.request(requested_file)
